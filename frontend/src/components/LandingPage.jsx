@@ -178,6 +178,29 @@ export default function LandingPage() {
               {item}
             </button>
           ))}
+          <button
+            key="About"
+            onClick={() => window.location.href = '/about'}
+            style={{
+              fontSize: '14px',
+              color: 'var(--text-2)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              position: 'relative',
+              padding: '8px 0'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.color = 'var(--text)'
+              e.target.style.transform = 'translateY(-2px)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.color = 'var(--text-2)'
+              e.target.style.transform = 'translateY(0)'
+            }}
+          >
+            About
+          </button>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
