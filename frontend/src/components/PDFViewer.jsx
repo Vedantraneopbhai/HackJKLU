@@ -1,140 +1,111 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 export default function PDFViewer({ 
-  pdfDocument, 
-  currentPage, 
-  totalPages, 
+  canvasRef, 
   lineIndex, 
   onLineClick, 
-  onPrevPage, 
-  onNextPage 
+  highlights 
 }) {
-  const [hoveredLine, setHoveredLine] = useState(null)
-  const [activeLines, setActiveLines] = useState([])
-  const containerRef = useRef(null)
-  const svgRef = useRef(null)
+  const [hoverLine, setHoverLine] = useState(null)
 
-  useEffect(() => {
-    if (pdfDocument && containerRef.current) {
-      const containerWidth = containerRef.current.offsetWidth
-      pdfDocument.renderPage(currentPage, containerWidth)
+  const handleMouseMove = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    
+    for (const line of lineIndex) {
+      const xMatch = x >= (line.x - 8) && x <= (line.x2 + 8)
+      const yMatch = y >= (line.y - line.height - 4) && y <= (line.y + 4)
+      
+      if (xMatch && yMatch) {
+        setHoverLine(line)
+        return
+      }
     }
-  }, [pdfDocument, currentPage])
+    setHoverLine(null)
+  }
 
-  const handleCanvasClick = (event) => {
-    const line = pdfDocument.getClickedLine(event, containerRef.current.getBoundingClientRect())
-    if (line) {
-      onLineClick(line)
-      if (!activeLines.find(l => l.text === line.text && l.x === line.x)) {
-        setActiveLines(prev => [...prev, line])
+  const handleClick = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    
+    for (const line of lineIndex) {
+      const xMatch = x >= (line.x - 8) && x <= (line.x2 + 8)
+      const yMatch = y >= (line.y - line.height - 4) && y <= (line.y + 4)
+      
+      if (xMatch && yMatch) {
+        onLineClick(line)
+        return
       }
     }
   }
 
-  const handleMouseMove = (event) => {
-    const line = pdfDocument.getClickedLine(event, containerRef.current.getBoundingClientRect())
-    setHoveredLine(line)
-  }
-
   const handleMouseLeave = () => {
-    setHoveredLine(null)
+    setHoverLine(null)
   }
 
-  const getLineKey = (line) => `${line.x}-${line.y}-${line.text.slice(0, 10)}`
+  const w = canvasRef.current?.width || 0
+  const h = canvasRef.current?.height || 0
 
   return (
-    <div className="pdf-container" ref={containerRef}>
-      <div className="pdf-wrapper">
-        <canvas
-          ref={pdfDocument.canvasRef}
-          className="pdf-canvas"
-          onClick={handleCanvasClick}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-        />
-        
-        {lineIndex.length > 0 && (
-          <svg
-            ref={svgRef}
-            className="pdf-overlay interactive"
-            style={{
-              width: pdfDocument.canvasRef.current?.width || 0,
-              height: pdfDocument.canvasRef.current?.height || 0
-            }}
-          >
-            {lineIndex.map((line) => {
-              const isHovered = hoveredLine && 
-                hoveredLine.x === line.x && 
-                hoveredLine.y === line.y
-              const isActive = activeLines.some(l => 
-                l.x === line.x && 
-                l.y === line.y
-              )
-              
-              return (
-                <rect
-                  key={getLineKey(line)}
-                  className={`line-highlight ${isHovered ? 'hover' : ''} ${isActive ? 'active' : ''}`}
-                  x={line.x - 4}
-                  y={line.y - line.height - 2}
-                  width={line.width + 8}
-                  height={line.height + 4}
-                  rx={2}
-                />
-              )
-            })}
-          </svg>
-        )}
-      </div>
-      
-      {totalPages > 1 && (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          gap: '16px', 
-          marginTop: '20px',
-          fontFamily: "'DM Mono', monospace",
-          fontSize: '12px',
-          color: 'var(--text-2)'
-        }}>
-          <button
-            onClick={onPrevPage}
-            disabled={currentPage === 1}
-            style={{
-              padding: '4px 8px',
-              background: currentPage === 1 ? 'var(--border)' : 'var(--bg-3)',
-              color: currentPage === 1 ? 'var(--text-3)' : 'var(--text)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-              fontSize: '11px'
-            }}
-          >
-            ← Previous
-          </button>
-          
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          
-          <button
-            onClick={onNextPage}
-            disabled={currentPage === totalPages}
-            style={{
-              padding: '4px 8px',
-              background: currentPage === totalPages ? 'var(--border)' : 'var(--bg-3)',
-              color: currentPage === totalPages ? 'var(--text-3)' : 'var(--text)',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-              fontSize: '11px'
-            }}
-          >
-            Next →
-          </button>
-        </div>
+    <div style={{ 
+      position: 'relative', 
+      display: 'inline-block', 
+      cursor: 'crosshair' 
+    }}>
+      <canvas 
+        ref={canvasRef} 
+        style={{ display: 'block' }} 
+      />
+      {w > 0 && h > 0 && (
+        <svg style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          pointerEvents: 'none' 
+        }}
+             width={w} 
+             height={h}>
+          {highlights.map((line, i) => (
+            <rect key={i}
+              x={line.x - 4} 
+              y={line.y - line.height - 2}
+              width={line.width + 8} 
+              height={line.height + 6}
+              rx={3} 
+              fill="var(--highlight)" 
+              stroke="var(--highlight-border)" 
+              strokeWidth={1} 
+            />
+          ))}
+          {hoverLine && (
+            <rect 
+              x={hoverLine.x - 4} 
+              y={hoverLine.y - hoverLine.height - 2}
+              width={hoverLine.width + 8} 
+              height={hoverLine.height + 6}
+              rx={3} 
+              fill="rgba(232,213,163,0.07)"
+              stroke="rgba(232,213,163,0.2)" 
+              strokeWidth={1} 
+            />
+          )}
+        </svg>
       )}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: w,
+          height: h,
+          cursor: 'crosshair'
+        }}
+        onMouseMove={handleMouseMove}
+        onClick={handleClick}
+        onMouseLeave={handleMouseLeave}
+      />
     </div>
   )
 }
