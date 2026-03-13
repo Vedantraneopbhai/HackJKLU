@@ -74,8 +74,8 @@ export default function PDFViewer({
               width={line.width + 8} 
               height={line.height + 6}
               rx={3} 
-              fill="var(--highlight)" 
-              stroke="var(--highlight-border)" 
+              fill="rgba(232,180,80,0.14)" 
+              stroke="rgba(232,180,80,0.5)" 
               strokeWidth={1} 
             />
           ))}
@@ -86,8 +86,8 @@ export default function PDFViewer({
               width={hoverLine.width + 8} 
               height={hoverLine.height + 6}
               rx={3} 
-              fill="rgba(232,213,163,0.07)"
-              stroke="rgba(232,213,163,0.2)" 
+              fill="rgba(232,180,80,0.05)"
+              stroke="rgba(232,180,80,0.15)" 
               strokeWidth={1} 
             />
           )}
