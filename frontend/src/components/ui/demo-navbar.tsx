@@ -1,14 +1,11 @@
-import { Home, User, Briefcase, FileText, Settings } from 'lucide-react'
-import { NavBar } from "./tubelight-navbar"
+import { Sparkles, BookOpen, Info } from 'lucide-react';
+import { NavBar } from "./tubelight-navbar";
 
 export function NavBarDemo() {
   const navItems = [
-    { name: 'Home', url: '#', icon: Home },
-    { name: 'About', url: '/about', icon: User },
-    { name: 'Projects', url: '#', icon: Briefcase },
-    { name: 'Resume', url: '#', icon: FileText },
-    { name: 'Settings', url: '/settings', icon: Settings }
-  ]
-
-  return <NavBar items={navItems} />
+    { name: 'Features', url: '#features', icon: Sparkles },
+    { name: 'How it works', url: '#how-it-works', icon: BookOpen },
+    { name: 'About', url: '/about', icon: Info }
+  ];
+  return <NavBar items={navItems} className="liquid-radiant-navbar" />;
 }

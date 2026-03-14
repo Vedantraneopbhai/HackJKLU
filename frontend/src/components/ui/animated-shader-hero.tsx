@@ -341,6 +341,21 @@ const Hero: React.FC<HeroProps> = ({
       {/* Tubelight Navbar */}
       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', zIndex: 100 }}>
         <NavBarDemo />
+        <style>{`
+          .liquid-radiant-bg {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+            box-shadow: 0 4px 32px 0 #6366f133, 0 2px 16px rgba(99,102,241,0.13);
+            border: 1.5px solid #6366f1;
+            animation: liquidMove 8s linear infinite alternate;
+          }
+          @keyframes liquidMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+          }
+          .liquid-radiant-navbar {
+            filter: drop-shadow(0 4px 32px #6366f1aa);
+          }
+        `}</style>
       </div>
       <style>{`
       @keyframes fadeInDown {
