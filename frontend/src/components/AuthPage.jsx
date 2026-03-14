@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../context/StoreContext'
+import { supabase } from '../lib/supabaseClient'
 
 export default function AuthPage() {
   const navigate = useNavigate()
@@ -8,10 +9,57 @@ export default function AuthPage() {
   const [mode, setMode] = useState('signin')
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' })
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    login({ name: form.name || 'Alex Johnson', email: form.email, role: form.role })
-    navigate('/dashboard')
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (mode === 'signup') {
+      // 1. Sign up with Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      // 2. Insert into profiles table
+      const user = data.user;
+      if (user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { id: user.id, full_name: form.name, email: form.email, role: form.role }
+          ]);
+        if (profileError) {
+          alert(profileError.message);
+          return;
+        }
+        login({ name: form.name, email: form.email, role: form.role });
+        navigate('/dashboard');
+      }
+    } else {
+      // Sign in
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
+      });
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+      if (profileError) {
+        alert(profileError.message);
+        return;
+      }
+      login(profileData);
+      navigate('/dashboard');
+    }
   }
 
   return (
